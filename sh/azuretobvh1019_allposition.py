@@ -7,7 +7,6 @@ folder_path = 'new_3d_dychair1_1000frame_nofilp_32joints'
 file_names = os.listdir(folder_path)
 
 offsets = {}
-joint_init_pos = {"pelvis": np.array([0.0, 0.0, 0.0]), "HIP_LEFT": np.array([0.0, 0.0, 0.0]), "HIP_RIGHT": np.array([0.0, 0.0, 0.0])}
 
 def extract_joint_name(line):
     # "Joint " 문자열 다음의 숫자 (인덱스 번호)를 추출
@@ -136,6 +135,7 @@ bvh_motion += "Frame Time: 0.01\n"
 
 #0번째 frame의 world dir vec | pelvis pos 구하기
 initial_world_dir = []
+pelvis_init_world_pos = 0
 file_name = f'frame0_body0_timestamp0_1_joints.txt'
 with open(os.path.join(folder_path, file_name), 'r') as file:
     joint_data = file.readlines()
@@ -157,14 +157,12 @@ for frame_num in range(frame_count):
 
         #position 게산 (pelvis)
         pelvis_world_pos = extract_joint_world_pos(joint_data[0]) - pelvis_init_world_pos
-        pelvis_world_pos *= 0.1 # TODO 임시
+        pelvis_world_pos *= 0.1 #TODO 임시
         bvh_motion += f"{pelvis_world_pos[0]} {pelvis_world_pos[1]} {pelvis_world_pos[2]} "
 
         #rotation 계산
         parent_quat = {}
         current_world_dir = calc_world_dir(joint_data)
-
-
         for line in joint_data:
             joint_name = extract_joint_name(line)
             if joint_name == "PELVIS":
@@ -172,17 +170,16 @@ for frame_num in range(frame_count):
                 pelvis_world_pos *= 0.1  # TODO 임시
                 bvh_motion += f"{pelvis_world_pos[0]} {pelvis_world_pos[1]} {pelvis_world_pos[2]} "
             elif joint_name == "HIP_LEFT":
-                hip_left_offset = (hip_left_init_world_pos - pelvis_init_world_pos)
-                hip_left_world_pos = pelvis_world_pos + R.from_quat(parent_quat["PELVIS"].as_quat()).apply(hip_left_offset)
+                hip_left_world_pos = extract_joint_world_pos(line) - hip_left_init_world_pos
+                hip_left_world_pos *= 0.1
                 bvh_motion += f"{hip_left_world_pos[0]} {hip_left_world_pos[1]} {hip_left_world_pos[2]} "
             elif joint_name == "HIP_RIGHT":
-                hip_right_offset = (hip_right_init_world_pos - pelvis_init_world_pos)
-                hip_right_world_pos = pelvis_world_pos + R.from_quat(parent_quat["PELVIS"].as_quat()).apply(hip_right_offset)
+                hip_right_world_pos = extract_joint_world_pos(line) - hip_right_init_world_pos
+                hip_right_world_pos *= 0.1
+
                 bvh_motion += f"{hip_right_world_pos[0]} {hip_right_world_pos[1]} {hip_right_world_pos[2]} "
 
 
-            if joint_name == None:
-                continue
 
             children = find_children(joint_name)
             if len(children) is 0:

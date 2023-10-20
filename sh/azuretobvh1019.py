@@ -3,7 +3,7 @@ import re
 from scipy.spatial.transform import Rotation as R
 import os
 
-folder_path = 'new_3d_dychair1_1000frame_noflip_34joint'
+folder_path = 'new_3d_dychair1_1000frame_yflip_32jioint'
 file_names = os.listdir(folder_path)
 
 offsets = {}
@@ -104,7 +104,7 @@ def calc_world_dir(joint_data):
 
 
 #joint 구조 파악. 사용할 joint를 여기서 조정할 수 있음.
-joint_structure_file = 'joint_structure34.txt'
+joint_structure_file = 'joint_structure.txt'
 with open(joint_structure_file, 'r') as file:
     joint_structure_data = file.readlines()[1:]  
 joint_info = {}
@@ -148,8 +148,7 @@ for frame_num in range(frame_count):
         #position 게산 (pelvis)
         pelvis_world_pos = extract_joint_world_pos(joint_data[0]) - pelvis_init_world_pos
         pelvis_world_pos *= 0.1 #TODO 임시
-        # bvh_motion += f"{pelvis_world_pos[0]} {pelvis_world_pos[1]} {pelvis_world_pos[2]} "
-        bvh_motion += f"0 0 0 "
+        bvh_motion += f"{pelvis_world_pos[0]} {pelvis_world_pos[1]} {pelvis_world_pos[2]} "
 
         #rotation 계산
         parent_quat = {}
@@ -194,7 +193,7 @@ for frame_num in range(frame_count):
             
             parent_quat[joint_name] = R.from_quat(quat)
 
-            euler = R.from_quat(quat).as_euler('xyz', degrees=True) #설명에서 normalize 시켜준다함. https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.transform.Rotation.from_quat.html
+            euler = R.from_quat(quat).as_euler('xyz', degrees=True) 
             bvh_motion += f"{euler[0]} {euler[1]} {euler[2]} "
         bvh_motion += "\n"
 
