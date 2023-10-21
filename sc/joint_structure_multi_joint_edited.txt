@@ -1,0 +1,10 @@
+Index	Joint name	Parent joint
+0	PELVIS	-
+1	A	PELVIS
+2	a	A
+3	B_PELVIS	PELVIS
+4	B	B_PELVIS
+5	b	B
+6	C_PELVIS	PELVIS
+7	C	C_PELVIS
+8	c	C

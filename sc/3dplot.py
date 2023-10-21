@@ -11,7 +11,7 @@ def read_files(directory):
         with open(os.path.join(directory, file), 'r') as f:
             lines = f.readlines()
             frame_data = []
-            for i in range(0, 26):
+            for i in range(0, 9):
             # for i in [0, 18, 19, 20, 21, 22, 23, 24, 25]:
                 line = lines[i]
                 match = re.search(r'Position\(([^)]+)\)', line)
@@ -53,7 +53,8 @@ def update(frame):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
 
-directory = 'new_3d_dychair1_1000frame'  
+# directory = 'new_3d_dychair1_1000frame'  
+directory = 'sc/multi_joint_edited' 
 joint_data = read_files(directory)
 
 fig = plt.figure()
