@@ -3,7 +3,7 @@ import re
 from scipy.spatial.transform import Rotation as R
 import os
 
-folder_path = 'new_3d_dychair1_1000frame_yflip_32jioint'
+folder_path = 'new_3d_dychair1_1000frame_nofilp_32joints'
 file_names = os.listdir(folder_path)
 
 offsets = {}
@@ -104,7 +104,7 @@ def calc_world_dir(joint_data):
 
 
 #joint 구조 파악. 사용할 joint를 여기서 조정할 수 있음.
-joint_structure_file = 'joint_structure.txt'
+joint_structure_file = 'joint_structureback.txt'
 with open(joint_structure_file, 'r') as file:
     joint_structure_data = file.readlines()[1:]  
 joint_info = {}
@@ -182,14 +182,14 @@ for frame_num in range(frame_count):
                     accum_quat = accum_quat * parent_quat[name]
 
                 from_dir = accum_quat.apply(initial_world_dir[joint_name]) #TODO forward를 써야하나 init을 써야하나?
-                # from_dir = initial_world_dir[joint_name]
             to_dir = current_world_dir[joint_name]
 
             if np.dot(from_dir, to_dir) >= 1 - 0.00001:
                 quat = R.from_euler('xyz', [0, 0, 0]).as_quat()
             else:
-                quat = np.cross(from_dir, to_dir)
+                quat = np.cross(from_dir, to_dir) #외적
                 quat = np.append(quat, ((np.linalg.norm(from_dir) ** 2) * (np.linalg.norm(to_dir) ** 2))** 0.5 + np.dot(from_dir, to_dir))
+
             
             parent_quat[joint_name] = R.from_quat(quat)
 

@@ -3,7 +3,7 @@ import re
 from scipy.spatial.transform import Rotation as R
 import os
 
-folder_path = 'new_3d_dychair1_1000frame_nofilp_32joints'
+folder_path = 'new_3d_dysf1_1000frame'
 file_names = os.listdir(folder_path)
 
 offsets = {}
