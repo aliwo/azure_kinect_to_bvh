@@ -3,7 +3,7 @@ import re
 from scipy.spatial.transform import Rotation as R
 import os
 
-folder_path = '강우혁chair1_1000'
+folder_path = 'new_3d_dychair1_1000frame'
 
 file_names = os.listdir(folder_path)
 
@@ -116,7 +116,9 @@ with open(os.path.join(folder_path, file_name), 'r') as file:
 #BVH Header 작성
 bvh_header = "HIERARCHY\n"
 joint_stack = []
-for root_joint_index in range(3):
+root_joint_order = [0, 1, 2]
+
+for root_joint_index in root_joint_order:
     bvh_header = write_joint(root_joint_index, 0, bvh_header)
 
 bvh_motion = "MOTION\n"
@@ -141,7 +143,7 @@ for frame_num in range(frame_count):
 
         #position 및 rotation 계산 (pelvis)
         parent_quat = {}
-        for root_joint_index in range(3):  # 0, 1, 2 인덱스에 대해 호출
+        for root_joint_index in root_joint_order:
             # Position 계산
             pelvis_world_pos = extract_joint_world_pos(joint_data[root_joint_index]) - pelvis_init_world_pos
             pelvis_world_pos *= 0.1  # TODO 임시
@@ -229,5 +231,5 @@ for frame_num in range(frame_count):
 
         bvh_motion += "\n"
 
-with open('sc/' + 'output.bvh', 'w') as file:
+with open('output.bvh', 'w') as file:
     file.write(bvh_header + bvh_motion)
