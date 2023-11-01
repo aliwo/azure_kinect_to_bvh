@@ -7,7 +7,7 @@ import os
 # folder_path = __file__.replace('azuretobvh.py', '') + 'new_3d_dychair1_1000frame'
 # folder_path = __file__.replace('azuretobvh.py', '') + 'new_3d_dychair1_1000frame_noflip_34joints'
 # folder_path = 'sc/' + 'new_3d_dychair1_1000frame'
-folder_path = 'sc/' + 'multi_joint_edited'
+folder_path = 'multi_joint_edited'
 
 # folder_path = 'x_axis_60_rot'
 # folder_path = 'two_joints_z_axis_60'
@@ -17,31 +17,12 @@ folder_path = 'sc/' + 'multi_joint_edited'
 file_names = os.listdir(folder_path)
 
 offsets = {}
-# offsets = {
-#     'PELVIS': "0.0 0.0 0.0",
-#     'SPINE_NAVAL': "-2.0534852 -15.5394837 -4.181665",
-#     'NECK': "0.5699097 -32.5931823 -2.317212",
-#     'SHOULDER_LEFT': "2.141966 -29.4036316 -2.4073975",
-#     'ELBOW_LEFT': "10.2529114 -3.0606751 -7.3811012",
-#     'HAND_LEFT': "4.327948 53.7679172 -1.6660644",
-#     'SHOULDER_RIGHT': "-11.7637847 -25.7325805 4.2502929",
-#     'ELBOW_RIGHT': "-3.1717751 24.1309143 7.9490211",
-#     'HAND_RIGHT': "-3.6477474 29.8932769 0.1396973",
-#     'KNEE_LEFT': "8.9984832 36.4912643 -2.6021973",
-#     'ANKLE_LEFT': "5.139151 31.7402542 13.2854493",
-#     'FOOT_LEFT': "-1.6279205 12.2801941 -11.6936524",
-#     'KNEE_RIGHT': "-4.2881592 35.3510299 11.3038818",
-#     'ANKLE_RIGHT': "6.1297729 33.1690323 9.9094727",
-#     'FOOT_RIGHT': "-9.3785003 10.5638306 -6.7896484",
-#     'HEAD': "-1.3472443 -6.8214539 -2.6128173"
-# }
+
 
 def extract_joint_name(line):
-    # "Joint " 문자열 다음의 숫자 (인덱스 번호)를 추출
     match = re.search(r"Joint (\d+):", line)
     if match:
         joint_index = int(match.group(1))        
-        # joint_info라는 이름의 딕셔너리에서 인덱스 번호를 기반으로 조인트의 이름을 찾음
         if joint_index in joint_info:
             return joint_info[joint_index]['name']
     return None  # 일치하는 내용이 없을 경우 None 반환
@@ -74,7 +55,7 @@ def write_joint(index, indent, bvh_header):
     bvh_header += f"{'    ' * indent}{'ROOT ' if parent_name == '-' else 'JOINT '}{joint_name}\n"
     bvh_header += f"{'    ' * indent}{{\n"
     bvh_header += f"{'    ' * (indent + 1)}OFFSET {offset}\n"
-    bvh_header += f"{'    ' * (indent + 1)}CHANNELS {'6 Xposition Yposition Zposition' if parent_name == '-' else '3'} Xrotation Yrotation Zrotation\n"
+    bvh_header += f"{'    ' * (indent + 1)}CHANNELS {'6 Xposition Yposition Zposition' if parent_name == '-' else '3'} Zrotation Yrotation Xrotation\n"
     # bvh_header += f"{'    ' * (indent + 1)}CHANNELS 3 Xrotation Yrotation Zrotation\n"
     for child_index, child_info in joint_info.items():
         if child_info['parent'] == joint_name:
@@ -133,19 +114,9 @@ def calc_world_dir(joint_data):
 
 
 
-
-
-
-
-
-
-
-
-
-
-#joint 구조 파악. 사용할 joint를 여기서 조정할 수 있음.
+#joint 구조 파악. 사용할 joint를 여기서 조정
 # joint_structure_file = 'sc/' + 'joint_structure.txt'
-joint_structure_file = 'sc/' + 'joint_structure_multi_joint_edited.txt'
+joint_structure_file = 'joint_structure_multi_joint_edited.txt'
 with open(joint_structure_file, 'r') as file:
     joint_structure_data = file.readlines()[1:]  
 joint_info = {}
@@ -189,8 +160,8 @@ for frame_num in range(frame_count):
         #position 게산 (pelvis)
         pelvis_world_pos = extract_joint_world_pos(joint_data[0]) - pelvis_init_world_pos
         pelvis_world_pos *= 0.1 #TODO 임시
-        # bvh_motion += f"{pelvis_world_pos[0]} {pelvis_world_pos[1]} {pelvis_world_pos[2]} "
-        bvh_motion += f"0 0 0 "
+        bvh_motion += f"{pelvis_world_pos[0]} {pelvis_world_pos[1]} {pelvis_world_pos[2]} "
+        #bvh_motion += f"0 0 0 "
 
         #rotation 계산
         parent_quat = {}
@@ -223,20 +194,8 @@ for frame_num in range(frame_count):
                 for name in ancestor_names:
                     accum_quat = accum_quat * parent_quat[name]
 
-                # from_dir = accum_quat.as_matrix().dot(initial_world_dir[joint_name])
-                from_dir = accum_quat.apply(initial_world_dir[joint_name]) #TODO forward를 써야하나 init을 써야하나?
-                # from_dir = initial_world_dir[joint_name]
+                from_dir = accum_quat.apply(initial_world_dir[joint_name]) 
             to_dir = current_world_dir[joint_name]
-
-            ## from_dir 이 문제인데, accum_quat은 멀쩡한데..?
-            # if joint_name == "A":
-            #     debug = 34
-
-            # if joint_name == "B_PELVIS":
-            #     debug = 10
-
-            # if joint_name == "C_PELVIS":
-            #     debug = 20
 
             if np.dot(from_dir, to_dir) >= 1 - 0.00001:
                 quat = R.from_euler('xyz', [0, 0, 0]).as_quat()
@@ -246,11 +205,11 @@ for frame_num in range(frame_count):
             
             parent_quat[joint_name] = R.from_quat(quat)
 
-            euler = R.from_quat(quat).as_euler('xyz', degrees=True) #설명에서 normalize 시켜준다함. https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.transform.Rotation.from_quat.html
+            euler = R.from_quat(quat).as_euler('xyz', degrees=True)
             
-            bvh_motion += f"{euler[0]} {euler[1]} {euler[2]} "
+            bvh_motion += f"{euler[2]} {euler[1]} {euler[0]} "
 
         bvh_motion += "\n"
 
-with open('sc/' + 'output.bvh', 'w') as file:
+with open('output.bvh', 'w') as file:
     file.write(bvh_header + bvh_motion)
