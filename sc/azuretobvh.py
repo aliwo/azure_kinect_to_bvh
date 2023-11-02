@@ -203,16 +203,11 @@ for frame_num in range(frame_count):
             to_dir = current_world_dir[joint_name]
             
             quat = get_from_to_quat(from_dir, to_dir)
-            if joint_name == "B_PELVIS" or joint_name == "C_PELVIS":
-            # if joint_name == "B_PELVIS":
-            # if 'b' in joint_name.lower() or 'c' in joint_name.lower():
-                quat = accum_quat.inv() * R.from_quat(get_from_to_quat(initial_world_dir[joint_name], to_dir))
-                quat = quat.as_quat()
-                # quat = quat * get_from_to_quat([0, 0, 1], to_dir)
-                # quat = R.identity().as_quat()
-                # quat = parent_quat['PELVIS'].as_quat()
-                # from_dir = initial_world_dir[joint_name]
-                # quat = get_from_to_quat(from_dir, to_dir)
+
+            # is_dummy_joint = (joint_name == "PELVIS_LEFT" or joint_name == "PELVIS_RIGHT")
+            # if is_dummy_joint:
+                # quat = accum_quat.inv() * R.from_quat(get_from_to_quat(initial_world_dir[joint_name], to_dir))
+                # quat = quat.as_quat()
 
             parent_quat[joint_name] = R.from_quat(quat)
 
