@@ -7,7 +7,7 @@ import os
 # folder_path = __file__.replace('azuretobvh.py', '') + 'new_3d_dychair1_1000frame'
 # folder_path = __file__.replace('azuretobvh.py', '') + 'new_3d_dychair1_1000frame_noflip_34joints'
 # folder_path = 'sc/' + 'new_3d_dychair1_1000frame'
-folder_path = 'multi_joint_edited'
+folder_path = 'sc/' + 'multi_joint_edited'
 
 # folder_path = 'x_axis_60_rot'
 # folder_path = 'two_joints_z_axis_60'
@@ -111,12 +111,17 @@ def calc_world_dir(joint_data):
         joint_world_dir[joint_name] = joint_world_dir[joint_name] / np.linalg.norm(joint_world_dir[joint_name])
     return joint_world_dir
 
-
-
+def get_from_to_quat(from_dir, to_dir):
+    if np.dot(from_dir, to_dir) >= 1 - 0.00001:
+        quat = R.from_euler('xyz', [0, 0, 0]).as_quat()
+    else:
+        quat = np.cross(from_dir, to_dir)
+        quat = np.append(quat, ((np.linalg.norm(from_dir) ** 2) * (np.linalg.norm(to_dir) ** 2))** 0.5 + np.dot(from_dir, to_dir))
+    return quat    
 
 #joint 구조 파악. 사용할 joint를 여기서 조정
 # joint_structure_file = 'sc/' + 'joint_structure.txt'
-joint_structure_file = 'joint_structure_multi_joint_edited.txt'
+joint_structure_file = 'sc/' + 'joint_structure_multi_joint_edited.txt'
 with open(joint_structure_file, 'r') as file:
     joint_structure_data = file.readlines()[1:]  
 joint_info = {}
@@ -196,13 +201,19 @@ for frame_num in range(frame_count):
 
                 from_dir = accum_quat.apply(initial_world_dir[joint_name]) 
             to_dir = current_world_dir[joint_name]
-
-            if np.dot(from_dir, to_dir) >= 1 - 0.00001:
-                quat = R.from_euler('xyz', [0, 0, 0]).as_quat()
-            else:
-                quat = np.cross(from_dir, to_dir)
-                quat = np.append(quat, ((np.linalg.norm(from_dir) ** 2) * (np.linalg.norm(to_dir) ** 2))** 0.5 + np.dot(from_dir, to_dir))
             
+            quat = get_from_to_quat(from_dir, to_dir)
+            if joint_name == "B_PELVIS" or joint_name == "C_PELVIS":
+            # if joint_name == "B_PELVIS":
+            # if 'b' in joint_name.lower() or 'c' in joint_name.lower():
+                quat = accum_quat.inv() * R.from_quat(get_from_to_quat(initial_world_dir[joint_name], to_dir))
+                quat = quat.as_quat()
+                # quat = quat * get_from_to_quat([0, 0, 1], to_dir)
+                # quat = R.identity().as_quat()
+                # quat = parent_quat['PELVIS'].as_quat()
+                # from_dir = initial_world_dir[joint_name]
+                # quat = get_from_to_quat(from_dir, to_dir)
+
             parent_quat[joint_name] = R.from_quat(quat)
 
             euler = R.from_quat(quat).as_euler('xyz', degrees=True)
@@ -211,5 +222,5 @@ for frame_num in range(frame_count):
 
         bvh_motion += "\n"
 
-with open('output.bvh', 'w') as file:
+with open('sc/' + 'output.bvh', 'w') as file:
     file.write(bvh_header + bvh_motion)
